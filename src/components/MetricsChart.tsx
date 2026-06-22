@@ -5,20 +5,48 @@ import type { MetricSeries } from '../data';
 
 interface MetricsChartProps {
   series: MetricSeries[];
-  title?: string;
   height?: number;
 }
 
+const Y_LABELS = ['Tdy', '0%', '$0', '$0', '0', '0', '0'];
+
 export function MetricsChart({ series, height = 420 }: MetricsChartProps) {
+  // Determine a shared dollar scale for Cost and CPA so CPA bars stay tiny.
+  const dollarMax = useMemo(() => {
+    const cost = series.find((s) => s.name === 'Cost');
+    const cpa = series.find((s) => s.name === 'CPA');
+    const values = [
+      ...(cost?.data.map((d) => d.value) ?? []),
+      ...(cpa?.data.map((d) => d.value) ?? []),
+    ];
+    return values.length ? Math.max(...values) : 1;
+  }, [series]);
+
+  const normalized = useMemo(
+    () =>
+      series.map((s) => {
+        const scaleMax = s.name === 'CPA' || s.name === 'Cost' ? dollarMax : Math.max(...s.data.map((d) => d.value));
+        const safeMax = scaleMax || 1;
+        return {
+          ...s,
+          normalizedData: s.data.map((d) => ({
+            x: d.date,
+            y: (d.value / safeMax) * 100,
+          })),
+        };
+      }),
+    [dollarMax, series]
+  );
+
   const apexSeries = useMemo(
     () =>
-      series.map((s) => ({
+      normalized.map((s) => ({
         name: s.name,
         type: mapType(s.type),
-        data: s.data.map((p) => ({ x: p.date, y: p.value })),
+        data: s.normalizedData,
         color: s.color,
       })),
-    [series]
+    [normalized]
   );
 
   const categories = useMemo(
@@ -31,19 +59,24 @@ export function MetricsChart({ series, height = 420 }: MetricsChartProps) {
       chart: {
         type: 'line',
         height,
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         toolbar: { show: false },
         animations: {
           enabled: true,
           easing: 'easeinout',
-          speed: 600,
+          speed: 900,
+          animateGradually: { enabled: true, delay: 120 },
+          dynamicAnimation: { enabled: true, speed: 700 },
         },
         background: 'transparent',
         dropShadow: { enabled: false },
       },
       stroke: {
         curve: series.map((s) => (s.type === 'spline' ? 'smooth' : 'straight')),
-        width: series.map((s) => (s.type === 'bar' ? 0 : s.type === 'spline' ? 3 : 2)),
+        width: series.map((s) =>
+          s.type === 'bar' ? 0 : s.type === 'spline' ? 4 : 2.5
+        ),
       },
       fill: {
         type: series.map((s) => (s.type === 'area' ? 'solid' : 'solid')),
@@ -51,8 +84,8 @@ export function MetricsChart({ series, height = 420 }: MetricsChartProps) {
       },
       plotOptions: {
         bar: {
-          columnWidth: '20%',
-          borderRadius: 4,
+          columnWidth: '22%',
+          borderRadius: 3,
         },
       },
       markers: {
@@ -64,7 +97,7 @@ export function MetricsChart({ series, height = 420 }: MetricsChartProps) {
         ),
         strokeWidth: 2,
         strokeColors: '#fff',
-        hover: { size: 7 },
+        hover: { size: 8 },
       },
       xaxis: {
         categories,
@@ -80,46 +113,39 @@ export function MetricsChart({ series, height = 420 }: MetricsChartProps) {
           trim: true,
         },
       },
-      yaxis: series.map((s, index) => ({
-        seriesName: s.name,
-        opposite: false,
-        floating: false,
-        offsetX: -index * 42,
-        decimalsInFloat: s.name === 'Conversions' ? 0 : 2,
-        axisBorder: { show: index === 0, color: '#e5e7eb' },
+      yaxis: {
+        min: 0,
+        max: 100,
+        tickAmount: 6,
+        axisBorder: { show: false },
         axisTicks: { show: false },
         labels: {
-          style: { colors: '#6b7280', fontSize: '11px' },
-          formatter: (val: number) => formatYAxisLabel(val, s.name),
+          style: { colors: '#6b7280', fontSize: '13px', fontWeight: 600 },
+          offsetX: -18,
+          formatter: (val: number) => formatYAxisLabel(val),
         },
-        title: {
-          text: index === 0 ? 'Tdy' : undefined,
-          style: { color: '#374151', fontSize: '12px', fontWeight: 600 },
-          offsetX: 8,
-        },
-      })),
+      },
       grid: {
         borderColor: '#f3f4f6',
         strokeDashArray: 0,
         xaxis: { lines: { show: false } },
         yaxis: { lines: { show: true } },
-        padding: { left: 10, right: 10 },
+        padding: { left: -10, right: 10 },
       },
       legend: { show: false },
       tooltip: {
         shared: true,
         intersect: false,
-        custom: ({ dataPointIndex, w }: { dataPointIndex: number; w: any }) => {
-          const date = w.globals.labels[dataPointIndex] as string;
-          const rows = w.config.series
-            .map((s: any, i: number) => {
-              const val = w.globals.series[i][dataPointIndex] as number | null;
-              if (val == null) return '';
-              const color = s.color as string;
-              const formatted = formatTooltipValue(val, s.name);
+        custom: ({ dataPointIndex }: { dataPointIndex: number }) => {
+          const date = categories[dataPointIndex];
+          const rows = series
+            .map((s) => {
+              const point = s.data[dataPointIndex];
+              if (!point) return '';
+              const formatted = formatTooltipValue(point.value, s.name);
               return `
                 <div class="tooltip-row">
-                  <span class="tooltip-dot" style="background:${color}"></span>
+                  <span class="tooltip-dot" style="background:${s.color}"></span>
                   <span class="tooltip-name">${s.name}:</span>
                   <span class="tooltip-value">${formatted}</span>
                 </div>
@@ -143,12 +169,23 @@ export function MetricsChart({ series, height = 420 }: MetricsChartProps) {
 
   return (
     <div className="metrics-chart-card">
-      <ReactApexChart
-        options={options}
-        series={apexSeries as ApexAxisChartSeries}
-        type="line"
-        height={height}
-      />
+      <button className="chart-edit-btn" type="button" aria-label="Edit chart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 10, height: 10 }}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      <div className="chart-inner">
+        <ReactApexChart
+          options={options}
+          series={apexSeries as ApexAxisChartSeries}
+          type="line"
+          height={height}
+        />
+      </div>
     </div>
   );
 }
@@ -167,14 +204,13 @@ function mapType(type: MetricSeries['type']): 'area' | 'line' | 'bar' {
   }
 }
 
-function formatYAxisLabel(value: number, name: string): string {
-  if (name === 'ROI confirmed') return `${value.toFixed(0)}%`;
-  if (name === 'Cost' || name === 'CPA') return `$${value.toFixed(0)}`;
-  return String(Math.round(value));
+function formatYAxisLabel(value: number): string {
+  const idx = Math.round((value / 100) * (Y_LABELS.length - 1));
+  const safeIdx = Math.max(0, Math.min(Y_LABELS.length - 1, idx));
+  return Y_LABELS[Y_LABELS.length - 1 - safeIdx];
 }
 
 function formatTooltipValue(value: number, name: string): string {
-  if (name === 'ROI confirmed') return `${value.toFixed(2)}`;
-  if (name === 'Cost' || name === 'CPA') return `${value.toFixed(2)}`;
-  return `${Math.round(value)}`;
+  if (name === 'Conversions') return `${Math.round(value)}`;
+  return `${value.toFixed(2)}`;
 }

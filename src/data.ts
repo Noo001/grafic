@@ -1,5 +1,5 @@
 export interface MetricPoint {
-  date: string; // ISO date YYYY-MM-DD
+  date: string; // displayed as-is in tooltip and on x-axis
   value: number;
 }
 
@@ -10,71 +10,22 @@ export interface MetricSeries {
   data: MetricPoint[];
 }
 
-function formatDate(date: Date): string {
-  const d = String(date.getDate()).padStart(2, '0');
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const y = date.getFullYear();
-  return `${d}.${m}.${y}`;
-}
-
-function generateDates(days = 14): Date[] {
-  const dates: Date[] = [];
-  const today = new Date('2026-06-22');
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    dates.push(d);
-  }
-  return dates;
-}
-
 export function generateSampleData(): MetricSeries[] {
-  const dates = generateDates(14);
+  // Values taken from the reference GIF (10.06.2026 – 14.06.2026)
+  const dates = ['10.06.2026', '11.06.2026', '12.06.2026', '13.06.2026', '14.06.2026'];
 
-  const cost: MetricPoint[] = dates.map((date, i) => ({
-    date: formatDate(date),
-    value: Number((30 + Math.sin(i * 0.5) * 15 + i * 2.5).toFixed(2)),
-  }));
+  const cost = [2.04, 25.85, 44.36, 55.65, 63.75];
+  const cpa = [0.68, 0.86, 1.23, 0.79, 0.71];
+  const roi = [610.78, 180.5, 161.47, 56.33, 357.25];
+  const conversions = [3, 30, 36, 70, 90];
 
-  const cpa: MetricPoint[] = dates.map((date, i) => ({
-    date: formatDate(date),
-    value: Number((0.4 + Math.abs(Math.cos(i * 0.4)) * 0.6 + i * 0.02).toFixed(2)),
-  }));
-
-  const roi: MetricPoint[] = dates.map((date, i) => ({
-    date: formatDate(date),
-    value: Number((20 + Math.cos(i * 0.6) * 30 + i * 3).toFixed(2)),
-  }));
-
-  const conversions: MetricPoint[] = dates.map((date, i) => ({
-    date: formatDate(date),
-    value: Math.round(20 + Math.sin(i * 0.5) * 15 + i * 4),
-  }));
+  const toPoints = (values: number[]) =>
+    values.map((value, i) => ({ date: dates[i], value }));
 
   return [
-    {
-      name: 'Cost',
-      type: 'area',
-      color: '#FDE68A',
-      data: cost,
-    },
-    {
-      name: 'CPA',
-      type: 'bar',
-      color: '#3B82F6',
-      data: cpa,
-    },
-    {
-      name: 'ROI confirmed',
-      type: 'spline',
-      color: '#22C55E',
-      data: roi,
-    },
-    {
-      name: 'Conversions',
-      type: 'line',
-      color: '#A855F7',
-      data: conversions,
-    },
+    { name: 'Cost', type: 'area', color: '#FDE68A', data: toPoints(cost) },
+    { name: 'CPA', type: 'bar', color: '#3B82F6', data: toPoints(cpa) },
+    { name: 'ROI confirmed', type: 'spline', color: '#22C55E', data: toPoints(roi) },
+    { name: 'Conversions', type: 'line', color: '#A855F7', data: toPoints(conversions) },
   ];
 }

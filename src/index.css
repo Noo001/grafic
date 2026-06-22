@@ -13,7 +13,7 @@ body,
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
-  background: #fce7f3; /* pink page background matching the screenshot vibe */
+  background: #f5d5de;
   color: #374151;
 }
 
@@ -31,15 +31,55 @@ body {
 }
 
 .metrics-chart-card {
-  background: #fff0f3; /* light pink card background from screenshot */
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  position: relative;
+  background: #fbdce6;
+  border-radius: 18px;
+  padding: 20px 20px 20px 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.chart-edit-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  height: 34px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #4b5563;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+}
+
+.chart-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.chart-edit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.chart-inner {
+  background: #fff5f7;
+  border-radius: 12px;
+  padding: 8px 8px 6px 0;
 }
 
 .metrics-chart-card .apexcharts-canvas {
-  background: #ffffff;
-  border-radius: 12px;
+  background: transparent;
+}
+
+.metrics-chart-card .apexcharts-inner {
+  background: #fff5f7;
 }
 
 /* Custom tooltip */
@@ -47,9 +87,9 @@ body {
   background: #ffffff;
   border-radius: 8px;
   padding: 12px 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  min-width: 180px;
+  min-width: 190px;
 }
 
 .tooltip-date {
@@ -64,7 +104,7 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .tooltip-dot {
@@ -82,4 +122,5 @@ body {
   margin-left: auto;
   font-weight: 700;
   color: #111827;
+  font-size: 14px;
 }
