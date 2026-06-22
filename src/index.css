@@ -1,0 +1,85 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  background: #fce7f3; /* pink page background matching the screenshot vibe */
+  color: #374151;
+}
+
+.app {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.chart-wrapper {
+  width: 100%;
+  max-width: 960px;
+}
+
+.metrics-chart-card {
+  background: #fff0f3; /* light pink card background from screenshot */
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.metrics-chart-card .apexcharts-canvas {
+  background: #ffffff;
+  border-radius: 12px;
+}
+
+/* Custom tooltip */
+.custom-tooltip {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-width: 180px;
+}
+
+.tooltip-date {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tooltip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tooltip-name {
+  color: #4b5563;
+}
+
+.tooltip-value {
+  margin-left: auto;
+  font-weight: 700;
+  color: #111827;
+}
