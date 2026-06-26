@@ -20,7 +20,7 @@
 ```bash
 # 1. Клонируйте репозиторий
 git clone <ссылка-на-репо>.git
-cd chart-dashboard
+cd grafic
 
 # 2. Установите зависимости
 npm install
@@ -122,9 +122,29 @@ src/
 - Тип линии (`spline` vs обычная `line`) настраивается внутри `MetricsChart` через `stroke.curve`.
 - По умолчанию `Cost` и `CPA` рисуются на одной долларовой шкале (CPA-столбцы остаются маленькими у оси), а `ROI confirmed` и `Conversions` — на собственных шкалах. Это поведение можно изменить в `MetricsChart` в блоке `normalized`.
 
-## Публикация на GitHub Pages
+## Публикация на GitHub Pages (автоматически через GitHub Actions)
+
+1. Создай репозиторий на GitHub и запушь код:
+
+```bash
+git remote add origin https://github.com/ТВОЙ_НИК/grafic.git
+git branch -M main
+git push -u origin main
+```
+
+2. В настройках репозитория (`Settings → Pages`) выбери **Source: GitHub Actions**.
+
+3. При следующем пуше в `main` запустится workflow `.github/workflows/deploy.yml` и опубликует сайт по адресу:
+
+```
+https://ТВОЙ_НИК.github.io/grafic/
+```
+
+> Если имя репозитория не `grafic`, поменяй `base: '/grafic/'` в `vite.config.ts` на `base: '/ИМЯ_РЕПО/'`.
+
+## Ручная публикация
 
 ```bash
 npm run build
-# затем разместите содержимое папки dist на GitHub Pages / Netlify / Vercel
+# затем размести содержимое папки dist на GitHub Pages / Netlify / Vercel
 ```
